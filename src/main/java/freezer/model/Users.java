@@ -9,7 +9,20 @@ public class Users {
 	private String lastModifiedDate;
 	private boolean isAdmin;
 	
-	
+	public Users() {
+		
+	}
+	public Users(int idUsers, String userName, String passwordHash, String password, String createdDate, String lastModifiedDate, boolean isAdmin) {
+		this.idUsers = idUsers;
+		this.userName = userName;
+		this.passwordHash = passwordHash;
+		this.password = password;
+		this.createdDate = createdDate;
+		this.lastModifiedDate = lastModifiedDate;
+		this.isAdmin = isAdmin;
+		
+		
+	}
 	public String getPassword() {
 		return password;
 	}

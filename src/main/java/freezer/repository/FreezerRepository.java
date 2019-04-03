@@ -24,7 +24,7 @@ import freezer.model.Items;
 import freezer.model.Reminder;
 import freezer.model.Users;
 @Component
-public final class FreezerRepository {
+public class FreezerRepository {
 
 	static final String DB_URL = "jdbc:mysql://localhost/freezerappdb";
 	static final String USER = "root";
@@ -136,17 +136,6 @@ public final class FreezerRepository {
 		}	
 	}
 
-/*	public boolean verifyToken(String token) {
-		try (Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
-				PreparedStatement st = conn.prepareStatement("SELECT * FROM authentication WHERE token=? and createdDate >= DATE_SUB(NOW(),INTERVAL 2 MINUTE);")) {
-			st.setString(1, token);
-			ResultSet  rs = st.executeQuery();
-			return rs.next();
-		} catch (SQLException se) {
-			se.printStackTrace();
-			return false;
-		}
-	}*/
 	public Authentication verifyTokenJava(String token) {
 		Authentication aut = new Authentication();
 		try (Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
@@ -359,7 +348,7 @@ public final class FreezerRepository {
 				list.add(user);
 			}
 		}catch(SQLException se){
-			se.printStackTrace();
+			throw new ExceptionName("An exception ocurred!");
 		}
 		return list;
 	}
@@ -378,9 +367,7 @@ public final class FreezerRepository {
 		}
 		return isAdmin;
 	}
-	public void fakeMethod() {
-		
-	}
+	
 	public List<Users> getAllUsersByName(String userName){
 		List<Users> list = new ArrayList<>();
 		try(Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
@@ -747,6 +734,25 @@ public final class FreezerRepository {
 		} catch (SQLException se) {
 			se.printStackTrace();
 			return false;
+		}
+		return true;
+	}
+	
+	public boolean updateWeightBagAfterIdItem(int idItem, int bagWeight) throws ExceptionEmptyList {
+		List<Items> itemsList = new ArrayList<>();
+		try(Connection conn = DriverManager.getConnection(DB_URL, USER, PASS);
+				PreparedStatement st = conn.prepareStatement("update items inner join freezers on freezers.idFreezer = items.fk_id_freezer set bagWeight=? where idItem=?");){
+			st.setInt(1, bagWeight);
+			st.setInt(2, idItem);
+			st.executeUpdate();
+			if(st.executeUpdate() == 0) {
+				return false;
+			}
+			if(itemsList.isEmpty()) {
+				throw new ExceptionEmptyList("Lista este goala!");
+			}
+		}catch (SQLException se) {
+			se.printStackTrace();
 		}
 		return true;
 	}

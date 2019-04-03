@@ -1,21 +1,9 @@
 package freezer.service;
 
-import java.nio.charset.Charset;
-import java.security.SecureRandom;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Component;
@@ -32,8 +20,8 @@ import freezer.controller.response.UserResponse;
 import freezer.model.Authentication;
 import freezer.model.ExceptionName;
 import freezer.model.GetItemsAddedByUser;
-import freezer.model.Reminder;
 import freezer.model.Users;
+import freezer.repository.ExceptionEmptyList;
 import freezer.repository.FreezerRepository;
 
 @Component
@@ -45,14 +33,34 @@ public class FreezerService {
 
 	@Autowired
 	private FreezerRepository freezerRepository;
+	
+	public UserResponse addUser(String userName, String password, boolean isAdmin){
+		System.out.println("before");
+		String passwordHash = BCrypt.hashpw(password, BCrypt.gensalt()); 
+		System.out.println("after " + passwordHash);
+		boolean wasAdded;
+		UserResponse userResponse = new UserResponse();
 
+		wasAdded = freezerRepository.addUser(userName, passwordHash, isAdmin);
+		if(wasAdded) {
+			userResponse.setStatus(ResponseStatus.SUCCESS);
+
+		}
+		else {
+			userResponse.setStatus(ResponseStatus.FAILURE);
+			userResponse.setMessage("Could not add");
+		}
+
+
+		return userResponse;
+	}
 
 	public LoginResponse loginUser(String userName, String password){
 		LoginResponse loginResponse = new LoginResponse();
 		Users user = freezerRepository.getUserByUsername(userName);
 		if (user.getUserName() == null) {
 			loginResponse.setStatus(ResponseStatus.FAILURE);
-			loginResponse.setMessage("Username or password inavalid!");
+			loginResponse.setMessage("Username or password invalid!");
 			return loginResponse;
 		}
 
@@ -74,7 +82,20 @@ public class FreezerService {
 
 		return loginResponse;	
 	}
-	
+	public UserResponse deleteUser(int idUsers) {
+
+		UserResponse userResponse = new UserResponse();
+
+		boolean wasDeleted = freezerRepository.deleteUser(idUsers);
+		if (wasDeleted) {
+			userResponse.setStatus(ResponseStatus.SUCCESS);
+		} else {
+			userResponse.setStatus(ResponseStatus.FAILURE);
+			userResponse.setMessage("Could not delete");
+		}	
+		return userResponse;
+	}
+
 	public boolean isAdmin(String token) {
 		
 		return freezerRepository.isAdmin(token);
@@ -83,7 +104,7 @@ public class FreezerService {
 	public AdminResponse getAllUsers()  {
 		AdminResponse adminResponse = new AdminResponse();
 		try {
-			adminResponse.setAdmin(freezerRepository.getAllUsers());
+			adminResponse.setUsersList(freezerRepository.getAllUsers());
 			adminResponse.setStatus(ResponseStatus.SUCCESS);
 		} catch (ExceptionName e) {
 			e.printStackTrace();
@@ -92,7 +113,43 @@ public class FreezerService {
 		
 		return adminResponse;
 	}
-	   
+	
+	public UserResponse updateUser(String userName, String passwordHash, int idUsers) {
+		UserResponse userResponse = new UserResponse();
+		boolean wasUpdated = freezerRepository.updateUser(userName, passwordHash, idUsers);
+		if(wasUpdated) {
+			userResponse.setStatus(ResponseStatus.SUCCESS);
+
+		}
+		else {
+			userResponse.setStatus(ResponseStatus.FAILURE);
+		}
+		return userResponse;
+	}   
+	public BaseResponse logOutFromAllDevices(int idUsers) {
+		BaseResponse logoutResponse = new BaseResponse();
+		boolean isLogOut = freezerRepository.logOutFromAllDevices(idUsers);
+		if(isLogOut) {
+			logoutResponse.setStatus(ResponseStatus.SUCCESS);
+		}
+		else {
+			logoutResponse.setStatus(ResponseStatus.FAILURE);
+		}
+		return logoutResponse;
+	}
+	
+	public BaseResponse logOut(String token) {
+		BaseResponse logoutResponse = new BaseResponse();
+		boolean isLogOut = freezerRepository.logOut(token);
+		if(isLogOut) {
+			logoutResponse.setStatus(ResponseStatus.SUCCESS);
+			logoutResponse.setMessage("Go to login!");
+		}
+		else {
+			logoutResponse.setStatus(ResponseStatus.FAILURE);
+		}
+		return logoutResponse;
+	}
 	private String generateToken() {
 		int leftLimit = 97; // letter 'a'
 	    int rightLimit = 122; // letter 'z'
@@ -126,24 +183,7 @@ public class FreezerService {
 			}	
 		}
 	}
-//	public boolean verifyTokenJava(String token) {
-//		Authentication aut = freezerRepository.verifyTokenJava(token);
-//		LocalDateTime validTime = LocalDateTime.now().minusMinutes(5);
-//		LocalDateTime createdDate = aut.getCreatedDate();
-//		if(aut.getToken() == null) {
-//			return false;
-//		}
-//		else{
-//			if(createdDate.isAfter(validTime)) {
-//				return true;
-//			}
-//			else {
-//				freezerRepository.deleteToken(token);
-//				return false;
-//			}	
-//		}
-//	}
-//	
+
 	public ReminderResponse addReminder(String message, Date date, int forUser) {
 		ReminderResponse reminderResponse = new ReminderResponse();
 		boolean wasAdded = freezerRepository.addReminder(message, date, forUser);
@@ -156,30 +196,7 @@ public class FreezerService {
 		return reminderResponse;
 	}
 	
-	public BaseResponse logOutFromAllDevices(int idUsers) {
-		BaseResponse logoutResponse = new BaseResponse();
-		boolean isLogOut = freezerRepository.logOutFromAllDevices(idUsers);
-		if(isLogOut) {
-			logoutResponse.setStatus(ResponseStatus.SUCCESS);
-		}
-		else {
-			logoutResponse.setStatus(ResponseStatus.FAILURE);
-		}
-		return logoutResponse;
-	}
 	
-	public BaseResponse logOut(String token) {
-		BaseResponse logoutResponse = new BaseResponse();
-		boolean isLogOut = freezerRepository.logOut(token);
-		if(isLogOut) {
-			logoutResponse.setStatus(ResponseStatus.SUCCESS);
-			logoutResponse.setMessage("Go to login!");
-		}
-		else {
-			logoutResponse.setStatus(ResponseStatus.FAILURE);
-		}
-		return logoutResponse;
-	}
 	
 	public boolean deleteReminder(int idReminder) {
 		return freezerRepository.deleteReminder(idReminder);
@@ -198,6 +215,7 @@ public class FreezerService {
 		}
 		return reminderResponse;
 	}
+	
 	public ReminderResponse getAllRemindersForAuser(int forUser)  {
 		ReminderResponse reminderResponse = new ReminderResponse();
 		try {
@@ -254,42 +272,10 @@ public class FreezerService {
 	}
 
 
-	public UserResponse addUser(String userName, String password, boolean isAdmin){
-		System.out.println("before");
-		String passwordHash = BCrypt.hashpw(password, BCrypt.gensalt()); 
-		System.out.println("after " + passwordHash);
-		boolean wasAdded;
-		UserResponse userResponse = new UserResponse();
-
-		wasAdded = freezerRepository.addUser(userName, passwordHash, isAdmin);
-		if(wasAdded) {
-			userResponse.setStatus(ResponseStatus.SUCCESS);
-
-		}
-		else {
-			userResponse.setStatus(ResponseStatus.FAILURE);
-			userResponse.setMessage("Could not add");
-		}
-
-
-		return userResponse;
-	}
-
-//	public void addUserC(String usersName, String password) throws ExceptionName {
-//		String passwordHash = BCrypt.hashpw(password, BCrypt.gensalt()); 
-//		freezerRepository.addUser(usersName, passwordHash);
-//	}
-
 	public FreezersResponse addFreezer(String freezerName, int capacity){
 		FreezersResponse freezerResponse = new FreezersResponse();
 		boolean wasAdded;
 		try {
-//			List<Freezers> listFreezers = freezerRepository.getAllFreezers();
-//			for (Freezers freezer : listFreezers) {
-//				if (freezer.getFreezerName().equals(freezerName)) {
-//					throw new ExceptionName("Give another name to the freezer, this one is taken!");
-//				}
-//			}
 			wasAdded = freezerRepository.addFreezer(freezerName, capacity);
 			if (wasAdded){
 				freezerResponse.setStatus(ResponseStatus.SUCCESS);
@@ -353,20 +339,7 @@ public class FreezerService {
 		}	
 		return freezerResponse;
 	}
-	public UserResponse deleteUser(int idUsers) {
-
-		UserResponse userResponse = new UserResponse();
-
-		boolean wasDeleted = freezerRepository.deleteUser(idUsers);
-		if (wasDeleted) {
-			userResponse.setStatus(ResponseStatus.SUCCESS);
-		} else {
-			userResponse.setStatus(ResponseStatus.FAILURE);
-			userResponse.setMessage("Could not delete");
-		}	
-		return userResponse;
-	}
-
+	
 	public ItemsResponse deleteItem(int idItem) {
 		ItemsResponse frozenItemsResponse = new ItemsResponse();
 
@@ -380,18 +353,6 @@ public class FreezerService {
 		return frozenItemsResponse;
 	}
 
-	public UserResponse updateUser(String userName, String passwordHash, int idUsers) {
-		UserResponse userResponse = new UserResponse();
-		boolean wasUpdated = freezerRepository.updateUser(userName, passwordHash, idUsers);
-		if(wasUpdated) {
-			userResponse.setStatus(ResponseStatus.SUCCESS);
-
-		}
-		else {
-			userResponse.setStatus(ResponseStatus.FAILURE);
-		}
-		return userResponse;
-	}
 
 	public ItemsResponse updateItem(int idItem, int bagWeight, int numberBags) {
 		ItemsResponse frozenItemsResponse = new ItemsResponse();
@@ -426,35 +387,32 @@ public class FreezerService {
 		return freezersResponse;
 	}
 
-//	public int getItemWeight(int idFreezers) {
-//		int totalWeight = 0;
-//		//TODO check below initialization is necessary?
-//		List<Items> listItems = freezerRepository.getItemWeight(idFreezers);
-//		for(Items items: listItems) {
-//			totalWeight = items.getBagWeight() * items.getNumberBags() + totalWeight;
-//		}
-//		return totalWeight;
-//	}
-
 	public List<GetItemsAddedByUser> getItemsAddedByUser(String userName) {
 		return freezerRepository.getItemsAddedByUser(userName);
 	}
 
+	public void setFreezerRepository(FreezerRepository freezerRepository) {
+		this.freezerRepository = freezerRepository;	
+	}
+
+	public ItemsResponse updateWeightBagAfterIdItem(int idItem, int bagWeight)  {
+		ItemsResponse iR = new ItemsResponse();
+		
+	    try {
+			boolean response = freezerRepository.updateWeightBagAfterIdItem(idItem, bagWeight);
+			if (response == true) {
+				iR.setStatus(ResponseStatus.SUCCESS);
+				iR.setMessage("Weight of bag update with success!");
+			}
+			else {
+				iR.setStatus(ResponseStatus.FAILURE);
+				iR.setMessage("Weight NOT update with success!");
+			}
+		} catch (ExceptionEmptyList e) {
+			e.printStackTrace();
+		}
+		return iR;
+	}
+
 	
-
-//	public ItemsResponse getAllItems() {
-//		 ItemsResponse itemsResponse = new ItemsResponse();
-//		 try {
-//			itemsResponse.setFrozenItems(freezerRepository.getAllItems());
-//			itemsResponse.setStatus(ResponseStatus.SUCCESS);
-//		} catch (ExceptionEmptyList e) {
-//			itemsResponse.setStatus(ResponseStatus.FAILURE);
-//			e.getMessage();
-//		}
-//		return itemsResponse;
-//		
-//	}
-
-
-
 }

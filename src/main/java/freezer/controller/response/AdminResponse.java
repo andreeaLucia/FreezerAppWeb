@@ -6,21 +6,21 @@ import java.util.List;
 import freezer.model.Users;
 
 public class AdminResponse extends BaseResponse {
-	List<Users> admin;
+	List<Users> usersList;
 
 	public AdminResponse(){	
 	}
 	
-	public AdminResponse(List<Users> admin){
-		this.admin = admin;
+	public AdminResponse(List<Users> usersList){
+		this.usersList = usersList;
 	}
 
-	public List<Users> getAdmin() {
-		return admin;
+	public List<Users> getUsersList() {
+		return usersList;
 	}
 
-	public void setAdmin(List<Users> list) {
-		this.admin = list;
+	public void setUsersList(List<Users> usersList) {
+		this.usersList = usersList;
 	}
 	
 }

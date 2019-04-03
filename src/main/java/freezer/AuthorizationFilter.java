@@ -44,8 +44,7 @@ public class AuthorizationFilter extends GenericFilterBean {
 			HttpServletRequest httpServletRequest = (HttpServletRequest) request;
 			String authorizationHeader = httpServletRequest.getHeader("X-Authorization");
 
-			if (freezerService.verifyTokenJava(authorizationHeader)
-					&& checkIsAdminAndPath(httpServletRequest.getRequestURI(), authorizationHeader)) {
+			if (freezerService.verifyTokenJava(authorizationHeader) && checkIsAdminAndPath(httpServletRequest.getRequestURI(), authorizationHeader)) {
 				filterChain.doFilter(request, response);
 			} else {
 				HttpServletResponse httpServletResponse = (HttpServletResponse) response;

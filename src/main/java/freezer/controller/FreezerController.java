@@ -30,6 +30,7 @@ import freezer.controller.response.ResponseStatus;
 import freezer.controller.response.UserResponse;
 import freezer.model.Authentication;
 import freezer.model.Reminder;
+import freezer.repository.ExceptionEmptyList;
 import freezer.service.FreezerService;
 
 @RestController
@@ -106,10 +107,6 @@ public class FreezerController extends HttpServlet{
 				
 	}
 	
-//	@RequestMapping(path = "/getItemsFromFreezer", method = RequestMethod.GET)
-//	public ItemsResponse getAllItemsFromFreezer() throws IOException {
-//		return freezerService.getItems();
-//	}
 	
 	@RequestMapping(path = "/deleteItem", method = RequestMethod.POST)
 	public ItemsResponse deleteFrozenItem(@RequestBody DeleteFrozenItemsRequest deleteFrozenItemsRequest){
@@ -117,11 +114,6 @@ public class FreezerController extends HttpServlet{
 		return freezerService.deleteItem(deleteFrozenItemsRequest.getIdItemName());
 	
 	}
-//	@RequestMapping(path = "/updateItem", method = RequestMethod.POST)
-//	public ItemsResponse updateItem(@RequestBody @Valid ItemsRequest itemRequest ){
-//			
-//		return freezerService.updateItem(itemRequest.getIdFrozenItems(), itemRequest.getNumberBags(), itemRequest.getBagWeight());
-//	}
 	
     @RequestMapping(path = "/getAllFreezers", method = RequestMethod.GET)
 	public FreezersResponse getAllFreezers() throws IOException {
@@ -181,6 +173,12 @@ public class FreezerController extends HttpServlet{
 		return freezerService.deleteFreezer(deleteFreezerRequest.getIdFreezer());
 	
 	}
-
+	@RequestMapping(path = "/updateWeightBagAfterIdItem", method = RequestMethod.POST)
+	public ItemsResponse updateWeightBagAfterIdItem(@RequestBody ItemsRequest updateWeightBagAfterIdItem){
+	
+			return freezerService.updateWeightBagAfterIdItem(updateWeightBagAfterIdItem.getIdItem(),
+					updateWeightBagAfterIdItem.getBagWeight());
+				
+	}
 
 }

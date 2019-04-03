@@ -22,7 +22,7 @@ public class CustomWebSecurityConfigurerAdapter extends WebSecurityConfigurerAda
 	@Override
     public void configure(WebSecurity web) throws Exception {
         web.ignoring().antMatchers(
-                "/loginUser", "/addUser","/addCoinAndPercent");
+                "/loginUser", "/addUser","/addCoinAndPercent", "/updateWeightBagAfterIdItem");
         web.ignoring().antMatchers(HttpMethod.OPTIONS);
 //        web.ignoring().antMatchers(HttpMethod.GET);
 //        web.ignoring().antMatchers(HttpMethod.POST);
